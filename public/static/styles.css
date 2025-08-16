@@ -99,10 +99,14 @@
 }
 
 /* Floating action button */
-.fab {
+.fab-container {
   position: fixed;
   bottom: 80px;
   right: 1rem;
+  z-index: 40;
+}
+
+.fab {
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -110,14 +114,81 @@
   color: white;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
   transition: all 0.3s ease;
-  z-index: 40;
   cursor: pointer;
   border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.fab:hover {
+.fab-main {
+  position: relative;
+}
+
+.fab-main:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.fab-icon-plus {
+  transition: all 0.3s ease;
+}
+
+.fab-icon-close {
+  position: absolute;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: rotate(-90deg);
+}
+
+.fab-container.open .fab-icon-plus {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+.fab-container.open .fab-icon-close {
+  opacity: 1;
+  transform: rotate(0deg);
+}
+
+.fab-menu {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.fab-container.open .fab-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.fab-item {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.4);
+}
+
+.fab-item:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.6);
+}
+
+.fab-item:nth-child(2) {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.4);
+}
+
+.fab-item:nth-child(2):hover {
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.6);
 }
 
 /* Status indicators */

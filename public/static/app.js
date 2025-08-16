@@ -262,6 +262,33 @@ class SportsTracker {
           </div>
         </div>
 
+        <!-- Calendar Integration Highlight -->
+        <div class="mb-6">
+          <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="text-lg font-bold mb-2">
+                  <i class="fas fa-magic mr-2"></i>
+                  Auto-Import Team Calendars
+                </h3>
+                <p class="text-blue-100 text-sm mb-3">
+                  Stop manually entering events! Get calendar URLs from coaches and sync entire season schedules instantly.
+                </p>
+                <div class="flex items-center text-blue-100 text-xs">
+                  <i class="fas fa-check-circle mr-2"></i>
+                  <span>Works with TeamSnap, SportsEngine, LeagueApps & more</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <button data-nav="team-management" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                  <i class="fas fa-calendar-plus mr-2"></i>
+                  Set Up Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Children Overview -->
         <div class="mb-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-3">Your Children</h2>
@@ -286,6 +313,13 @@ class SportsTracker {
                     <span class="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">${team.team_name}</span>
                   `).join('')}
                 </div>
+                ${child.teams.length > 0 ? `
+                  <div class="mt-3">
+                    <button data-nav="team-management" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      <i class="fas fa-sync-alt mr-1"></i>Set up calendar sync for teams
+                    </button>
+                  </div>
+                ` : ''}
               </div>
             `).join('')}
           </div>
@@ -624,9 +658,23 @@ class SportsTracker {
 
   renderFAB() {
     return `
-      <button class="fab flex items-center justify-center" data-nav="add-event">
-        <i class="fas fa-plus text-xl"></i>
-      </button>
+      <div class="fab-container">
+        <!-- Main FAB -->
+        <button class="fab fab-main flex items-center justify-center" onclick="this.parentElement.classList.toggle('open')">
+          <i class="fas fa-plus text-xl fab-icon-plus"></i>
+          <i class="fas fa-times text-xl fab-icon-close"></i>
+        </button>
+        
+        <!-- FAB Menu Items -->
+        <div class="fab-menu">
+          <button class="fab fab-item" data-nav="add-event" title="Add Event">
+            <i class="fas fa-calendar-plus text-lg"></i>
+          </button>
+          <button class="fab fab-item" data-nav="team-management" title="Calendar Sync">
+            <i class="fas fa-sync-alt text-lg"></i>
+          </button>
+        </div>
+      </div>
     `;
   }
 
