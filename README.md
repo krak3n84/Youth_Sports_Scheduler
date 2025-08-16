@@ -13,6 +13,8 @@
 - ✅ **Calendar View**: Family calendar with all children's events
 - ✅ **Attendance Tracking**: Mark attendance status for each event
 - ✅ **Mobile-Responsive UI**: Clean mobile-first design with bottom navigation
+- ✅ **Back Button Navigation**: Navigate back without exiting the app
+- ✅ **Cancel/Clear Buttons**: Easy form cancellation and clearing
 - ✅ **Real-time Data**: Cloudflare D1 database for persistent storage
 - ✅ **Sample Data**: Pre-loaded with Rockvale teams and sample events
 
@@ -116,6 +118,8 @@ The app includes sample data for:
 ## 🎨 Design Features
 - **Mobile-First**: Optimized for mobile devices with touch-friendly interface
 - **Bottom Navigation**: Easy thumb navigation with Home, Calendar, Children, and Logout
+- **Back Button Navigation**: Navigate back without exiting the app
+- **Cancel/Clear Buttons**: Easy form cancellation and clearing
 - **Sport-Specific Colors**: Each sport has its own color theme
 - **Event Type Indicators**: Visual badges for games, practices, tournaments, and meets
 - **Floating Action Button**: Quick access to add new events
