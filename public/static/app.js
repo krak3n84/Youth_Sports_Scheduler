@@ -741,56 +741,142 @@ class SportsTracker {
       }
     }
 
+    console.log('Available teams:', allTeams);
+    console.log('Team settings:', teamSettings);
+
     document.getElementById('app').innerHTML = `
       <div class="mobile-container pb-20">
-        ${this.renderPageHeader('Team Management', 'Configure calendar integration for your teams', 'calendar-alt', true)}
+        ${this.renderPageHeader('Team Calendar Setup', 'Connect team calendars to auto-import events', 'calendar-alt', true)}
+
+        ${allTeams.length === 0 ? `
+          <!-- No Teams Available -->
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+              <i class="fas fa-info-circle text-yellow-600 mt-1 mr-3"></i>
+              <div>
+                <h3 class="font-medium text-yellow-800 mb-2">No Teams Found</h3>
+                <p class="text-sm text-yellow-700 mb-3">
+                  You need to add children and assign them to teams before setting up calendar integration.
+                </p>
+                <div class="space-y-2 text-sm text-yellow-700">
+                  <div>1. Go to <strong>Children</strong> tab</div>
+                  <div>2. Add your children</div>
+                  <div>3. Assign them to their teams</div>
+                  <div>4. Come back here to sync team calendars</div>
+                </div>
+                <button data-nav="children" class="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                  <i class="fas fa-arrow-right mr-2"></i>Go to Children
+                </button>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Step-by-Step Workflow -->
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6 mb-6">
+          <h3 class="font-bold text-green-900 mb-4 text-lg">
+            <i class="fas fa-magic mr-2"></i>3-Step Calendar Integration
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg">
+              <div class="text-2xl font-bold text-green-600 mb-2">1</div>
+              <h4 class="font-semibold text-gray-800 mb-2">Get Calendar URL</h4>
+              <p class="text-sm text-gray-600">Ask your coach for the team calendar link (iCal/ICS format)</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg">
+              <div class="text-2xl font-bold text-blue-600 mb-2">2</div>
+              <h4 class="font-semibold text-gray-800 mb-2">Paste & Enable</h4>
+              <p class="text-sm text-gray-600">Paste URL below, turn on sync, and save settings</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg">
+              <div class="text-2xl font-bold text-purple-600 mb-2">3</div>
+              <h4 class="font-semibold text-gray-800 mb-2">Sync Events</h4>
+              <p class="text-sm text-gray-600">Click "Sync Events" to import all team activities</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- How to Get Calendar URLs -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+          <h3 class="font-medium text-blue-900 mb-3">
+            <i class="fas fa-question-circle mr-2"></i>Where to Get Calendar URLs
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-semibold text-blue-800 mb-2">Common Platforms:</h4>
+              <div class="space-y-1 text-sm text-blue-700">
+                <div>• <strong>TeamSnap:</strong> Team Settings → Calendar → Export</div>
+                <div>• <strong>SportsEngine:</strong> Team Page → Export Calendar</div>
+                <div>• <strong>LeagueApps:</strong> Calendar → Subscribe</div>
+                <div>• <strong>Stack Sports:</strong> Calendar Options</div>
+              </div>
+            </div>
+            <div>
+              <h4 class="font-semibold text-blue-800 mb-2">What to Ask For:</h4>
+              <div class="space-y-1 text-sm text-blue-700">
+                <div>• "Calendar subscription link"</div>
+                <div>• "iCal feed URL"</div>
+                <div>• "Export calendar link"</div>
+                <div>• ".ics file URL"</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-blue-100 rounded text-xs text-blue-700">
+            <strong>Example URLs:</strong><br>
+            https://go.teamsnap.com/ical/12345/access-key<br>
+            https://sportsengine.com/calendar/export/team123.ics
+          </div>
+        </div>
 
         <div class="space-y-6">
           ${allTeams.map(team => {
             const settings = teamSettings[team.team_id] || {};
             return `
-              <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="mb-4">
-                  <h3 class="font-semibold text-gray-900 text-lg">${team.team_name}</h3>
-                  <p class="text-sm text-gray-600">${team.sport_name}</p>
+              <div class="bg-white border-2 border-gray-200 p-6 rounded-lg shadow-md">
+                <div class="mb-6">
+                  <h3 class="font-bold text-gray-900 text-xl">${team.team_name}</h3>
+                  <p class="text-gray-600">${team.sport_name}</p>
                 </div>
 
-                <div class="space-y-4">
-                  <!-- Calendar URL Input -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Team Calendar URL
-                      <span class="text-gray-500 font-normal">(iCal/ICS format)</span>
+                <div class="space-y-6">
+                  <!-- Calendar URL Input - Made More Prominent -->
+                  <div class="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                      <i class="fas fa-link mr-2 text-blue-600"></i>
+                      Paste Team Calendar URL Here
                     </label>
                     <input 
                       type="url" 
-                      class="form-input w-full px-3 py-2 rounded-lg" 
-                      placeholder="https://example.com/team-calendar.ics"
+                      class="form-input w-full px-4 py-3 rounded-lg text-lg border-2 border-gray-300 focus:border-blue-500" 
+                      placeholder="https://go.teamsnap.com/ical/your-team-id/access-key"
                       value="${settings.calendar_url || ''}"
                       data-team-id="${team.team_id}"
                       data-field="calendar_url"
                     >
-                    <p class="text-xs text-gray-500 mt-1">
-                      Enter the calendar URL provided by your team/league
+                    <p class="text-sm text-gray-600 mt-2">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      Get this URL from your coach or team management platform
                     </p>
                   </div>
 
-                  <!-- Sync Toggle -->
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <label class="text-sm font-medium text-gray-700">Enable Calendar Sync</label>
-                      <p class="text-xs text-gray-500">Automatically import events from team calendar</p>
+                  <!-- Sync Toggle - Made More Prominent -->
+                  <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <label class="text-lg font-semibold text-green-800">Enable Auto-Sync</label>
+                        <p class="text-sm text-green-600">Turn this ON to automatically import team events</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          class="sr-only peer" 
+                          ${settings.sync_enabled ? 'checked' : ''}
+                          data-team-id="${team.team_id}"
+                          data-field="sync_enabled"
+                        >
+                        <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                      </label>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        class="sr-only peer" 
-                        ${settings.sync_enabled ? 'checked' : ''}
-                        data-team-id="${team.team_id}"
-                        data-field="sync_enabled"
-                      >
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
                   </div>
 
                   <!-- Sync Status -->
@@ -804,21 +890,21 @@ class SportsTracker {
                           ${settings.last_sync ? 'Last sync: ' + dayjs(settings.last_sync).format('MMM D, h:mm A') : 'Never synced'}
                         </div>
                       </div>
-                      <div class="flex gap-2">
+                      <div class="flex gap-3">
                         <button 
-                          class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                          class="flex-1 px-4 py-3 text-lg bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                          data-team-id="${team.team_id}"
+                          onclick="window.sportsTracker.saveTeamSettings(${team.team_id})"
+                        >
+                          <i class="fas fa-save mr-2"></i>Save Settings
+                        </button>
+                        <button 
+                          class="flex-1 px-4 py-3 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold ${!settings.calendar_url || !settings.sync_enabled ? 'opacity-50 cursor-not-allowed' : ''}"
                           data-team-id="${team.team_id}"
                           onclick="window.sportsTracker.syncTeamCalendar(${team.team_id})"
                           ${!settings.calendar_url || !settings.sync_enabled ? 'disabled' : ''}
                         >
-                          <i class="fas fa-sync-alt mr-1"></i>Sync Now
-                        </button>
-                        <button 
-                          class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                          data-team-id="${team.team_id}"
-                          onclick="window.sportsTracker.saveTeamSettings(${team.team_id})"
-                        >
-                          <i class="fas fa-save mr-1"></i>Save
+                          <i class="fas fa-sync-alt mr-2"></i>Sync Events
                         </button>
                       </div>
                     </div>
