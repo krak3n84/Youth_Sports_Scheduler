@@ -90,6 +90,9 @@ class SportsTracker {
       case 'add-event':
         this.showAddEvent();
         break;
+      case 'team-management':
+        this.showTeamManagement();
+        break;
       case 'logout':
         this.logout();
         break;
@@ -345,6 +348,7 @@ class SportsTracker {
                 <div>
                   <span class="event-${event.type} px-2 py-1 text-xs rounded-full">${event.type.toUpperCase()}</span>
                   <span class="ml-2 text-sm text-gray-600">${event.team_name}</span>
+                  ${event.source === 'calendar' ? '<i class="fas fa-sync-alt text-blue-500 ml-2 text-xs" title="Imported from team calendar"></i>' : ''}
                 </div>
                 <div class="text-right">
                   <div class="text-sm font-medium text-gray-900">${dayjs(event.date).format('MMM D, YYYY')}</div>
@@ -423,6 +427,21 @@ class SportsTracker {
               </div>
             </div>
           `).join('')}
+        </div>
+
+        <!-- Team Management Link -->
+        <div class="mb-6">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-medium text-blue-900">Team Calendar Integration</h3>
+                <p class="text-sm text-blue-700 mt-1">Sync events from team calendars automatically</p>
+              </div>
+              <button data-nav="team-management" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-calendar-alt mr-2"></i>Manage Teams
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Add Child Form -->
@@ -639,6 +658,204 @@ class SportsTracker {
           <p class="text-gray-600">${subtitle}</p>
         </div>
       `;
+    }
+  }
+
+  async showTeamManagement() {
+    // Get all teams from all children
+    const allTeams = [];
+    this.children.forEach(child => {
+      child.teams.forEach(team => {
+        if (!allTeams.find(t => t.team_id === team.team_id)) {
+          allTeams.push({
+            team_id: team.team_id,
+            team_name: team.team_name,
+            sport_name: team.sport_name
+          });
+        }
+      });
+    });
+
+    // Load team calendar settings
+    const teamSettings = {};
+    for (const team of allTeams) {
+      try {
+        const response = await axios.get(`/api/teams/${team.team_id}/sync-status`);
+        teamSettings[team.team_id] = response.data;
+      } catch (error) {
+        console.error('Error loading team settings:', error);
+        teamSettings[team.team_id] = {
+          calendar_url: '',
+          sync_enabled: false,
+          last_sync: null,
+          imported_events: 0
+        };
+      }
+    }
+
+    document.getElementById('app').innerHTML = `
+      <div class="mobile-container pb-20">
+        ${this.renderPageHeader('Team Management', 'Configure calendar integration for your teams', 'calendar-alt', true)}
+
+        <div class="space-y-6">
+          ${allTeams.map(team => {
+            const settings = teamSettings[team.team_id] || {};
+            return `
+              <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="mb-4">
+                  <h3 class="font-semibold text-gray-900 text-lg">${team.team_name}</h3>
+                  <p class="text-sm text-gray-600">${team.sport_name}</p>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Calendar URL Input -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Team Calendar URL
+                      <span class="text-gray-500 font-normal">(iCal/ICS format)</span>
+                    </label>
+                    <input 
+                      type="url" 
+                      class="form-input w-full px-3 py-2 rounded-lg" 
+                      placeholder="https://example.com/team-calendar.ics"
+                      value="${settings.calendar_url || ''}"
+                      data-team-id="${team.team_id}"
+                      data-field="calendar_url"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">
+                      Enter the calendar URL provided by your team/league
+                    </p>
+                  </div>
+
+                  <!-- Sync Toggle -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <label class="text-sm font-medium text-gray-700">Enable Calendar Sync</label>
+                      <p class="text-xs text-gray-500">Automatically import events from team calendar</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        class="sr-only peer" 
+                        ${settings.sync_enabled ? 'checked' : ''}
+                        data-team-id="${team.team_id}"
+                        data-field="sync_enabled"
+                      >
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  <!-- Sync Status -->
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                      <div class="text-sm">
+                        <div class="font-medium text-gray-700">
+                          ${settings.imported_events || 0} imported events
+                        </div>
+                        <div class="text-gray-500">
+                          ${settings.last_sync ? 'Last sync: ' + dayjs(settings.last_sync).format('MMM D, h:mm A') : 'Never synced'}
+                        </div>
+                      </div>
+                      <div class="flex gap-2">
+                        <button 
+                          class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                          data-team-id="${team.team_id}"
+                          onclick="window.sportsTracker.syncTeamCalendar(${team.team_id})"
+                          ${!settings.calendar_url || !settings.sync_enabled ? 'disabled' : ''}
+                        >
+                          <i class="fas fa-sync-alt mr-1"></i>Sync Now
+                        </button>
+                        <button 
+                          class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                          data-team-id="${team.team_id}"
+                          onclick="window.sportsTracker.saveTeamSettings(${team.team_id})"
+                        >
+                          <i class="fas fa-save mr-1"></i>Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Help Text -->
+                  <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <h4 class="text-sm font-medium text-blue-900 mb-1">How to get your team's calendar URL:</h4>
+                    <ul class="text-xs text-blue-800 space-y-1">
+                      <li>• Ask your coach or team manager for the calendar link</li>
+                      <li>• Look for "Export Calendar" or "Subscribe" options on team websites</li>
+                      <li>• Common formats: .ics, iCal, Google Calendar public URL</li>
+                      <li>• Usually ends with .ics or contains "calendar" in the URL</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        ${allTeams.length === 0 ? `
+          <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-calendar-times text-6xl mb-4"></i>
+            <p class="text-lg mb-2">No teams found</p>
+            <p class="text-sm">Add children and assign them to teams first</p>
+            <button data-nav="children" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Go to Children
+            </button>
+          </div>
+        ` : ''}
+      </div>
+
+      ${this.renderMobileNav()}
+    `;
+  }
+
+  async saveTeamSettings(teamId) {
+    try {
+      const calendarUrlInput = document.querySelector(`input[data-team-id="${teamId}"][data-field="calendar_url"]`);
+      const syncEnabledInput = document.querySelector(`input[data-team-id="${teamId}"][data-field="sync_enabled"]`);
+      
+      const response = await axios.put(`/api/teams/${teamId}/calendar`, {
+        calendar_url: calendarUrlInput.value.trim(),
+        sync_enabled: syncEnabledInput.checked
+      });
+      
+      if (response.data.success) {
+        alert('Team settings saved successfully!');
+        // Refresh the page to update sync status
+        this.showTeamManagement();
+      } else {
+        alert('Failed to save team settings');
+      }
+    } catch (error) {
+      alert('Error saving team settings: ' + (error.response?.data?.error || 'Network error'));
+    }
+  }
+
+  async syncTeamCalendar(teamId) {
+    try {
+      // Find the sync button and show loading state
+      const syncButton = document.querySelector(`button[data-team-id="${teamId}"]`);
+      const originalText = syncButton.innerHTML;
+      syncButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Syncing...';
+      syncButton.disabled = true;
+      
+      const response = await axios.post(`/api/teams/${teamId}/sync`);
+      
+      if (response.data.success) {
+        alert(`Successfully synced ${response.data.synced_events} events!`);
+        // Reload user data and refresh the page
+        await this.loadUserData();
+        this.showTeamManagement();
+      } else {
+        alert('Failed to sync calendar');
+        syncButton.innerHTML = originalText;
+        syncButton.disabled = false;
+      }
+    } catch (error) {
+      alert('Sync failed: ' + (error.response?.data?.error || 'Network error'));
+      // Reset button state
+      const syncButton = document.querySelector(`button[data-team-id="${teamId}"]`);
+      syncButton.innerHTML = '<i class="fas fa-sync-alt mr-1"></i>Sync Now';
+      syncButton.disabled = false;
     }
   }
 

@@ -33,6 +33,9 @@ export interface Team {
   coach_name?: string;
   coach_contact?: string;
   season?: string;
+  calendar_url?: string;
+  last_sync?: string;
+  sync_enabled: boolean;
   created_at: string;
 }
 
@@ -60,6 +63,9 @@ export interface Event {
   opponent?: string;
   is_home: boolean;
   reminder_minutes: number;
+  source: 'manual' | 'calendar' | 'imported';
+  external_id?: string;
+  last_updated?: string;
   created_at: string;
   updated_at?: string;
   team?: Team; // For joined queries
