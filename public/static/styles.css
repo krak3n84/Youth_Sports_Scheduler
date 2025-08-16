@@ -125,6 +125,30 @@
 .status-not_attending { color: #ef4444; }
 .status-pending { color: #f59e0b; }
 
+/* Back button styling */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.back-button:hover {
+  background-color: #f3f4f6;
+  transform: translateX(-2px);
+}
+
+.back-button:active {
+  transform: translateX(-1px);
+  background-color: #e5e7eb;
+}
+
 /* Auth tabs */
 .auth-tab {
   border-bottom: 2px solid transparent;

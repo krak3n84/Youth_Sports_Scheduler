@@ -3,6 +3,7 @@ class SportsTracker {
   constructor() {
     this.currentUser = null;
     this.currentView = 'dashboard';
+    this.previousView = 'dashboard';
     this.children = [];
     this.events = [];
     this.sports = [];
@@ -36,6 +37,12 @@ class SportsTracker {
         const view = target.dataset.nav;
         this.navigateTo(view);
       }
+      
+      // Back button functionality
+      if (e.target.matches('[data-back]') || e.target.closest('[data-back]')) {
+        e.preventDefault();
+        this.goBack();
+      }
     });
 
     // Forms
@@ -64,6 +71,11 @@ class SportsTracker {
   }
 
   navigateTo(view) {
+    // Save previous view for back button (except for logout)
+    if (view !== 'logout') {
+      this.previousView = this.currentView;
+    }
+    
     this.currentView = view;
     switch (view) {
       case 'dashboard':
@@ -83,6 +95,12 @@ class SportsTracker {
         break;
     }
     this.updateNavigation();
+  }
+
+  goBack() {
+    // Navigate to previous view, defaulting to dashboard
+    const backView = this.previousView || 'dashboard';
+    this.navigateTo(backView);
   }
 
   updateNavigation() {
@@ -227,14 +245,7 @@ class SportsTracker {
     
     document.getElementById('app').innerHTML = `
       <div class="mobile-container pb-20">
-        <!-- Header -->
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-1">
-            <i class="fas fa-trophy text-blue-600 mr-2"></i>
-            Welcome back, ${this.currentUser.name}!
-          </h1>
-          <p class="text-gray-600">Manage your family's sports activities</p>
-        </div>
+        ${this.renderPageHeader(`Welcome back, ${this.currentUser.name}!`, 'Manage your family\'s sports activities', 'trophy', false)}
 
         <!-- Quick Stats -->
         <div class="grid grid-cols-2 gap-4 mb-6">
@@ -325,13 +336,7 @@ class SportsTracker {
   showCalendar() {
     document.getElementById('app').innerHTML = `
       <div class="mobile-container pb-20">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-1">
-            <i class="fas fa-calendar text-blue-600 mr-2"></i>
-            Family Calendar
-          </h1>
-          <p class="text-gray-600">All upcoming events for your children</p>
-        </div>
+        ${this.renderPageHeader('Family Calendar', 'All upcoming events for your children', 'calendar', false)}
 
         <div class="space-y-4">
           ${this.events.map(event => `
@@ -382,13 +387,7 @@ class SportsTracker {
   showChildren() {
     document.getElementById('app').innerHTML = `
       <div class="mobile-container pb-20">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-1">
-            <i class="fas fa-users text-blue-600 mr-2"></i>
-            Children
-          </h1>
-          <p class="text-gray-600">Manage your children's profiles and teams</p>
-        </div>
+        ${this.renderPageHeader('Children', 'Manage your children\'s profiles and teams', 'users', false)}
 
         <div class="space-y-4 mb-6">
           ${this.children.map(child => `
@@ -438,9 +437,14 @@ class SportsTracker {
               <label class="block text-sm font-medium text-gray-700 mb-1">Birth Date (Optional)</label>
               <input type="date" name="birth_date" class="form-input w-full px-3 py-2 rounded-lg">
             </div>
-            <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg font-medium text-white">
-              <i class="fas fa-plus mr-2"></i>Add Child
-            </button>
+            <div class="flex gap-3">
+              <button type="button" onclick="document.getElementById('addChildForm').reset()" class="flex-1 py-3 px-4 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                Clear
+              </button>
+              <button type="submit" class="flex-1 btn-primary py-3 px-4 rounded-lg font-medium text-white">
+                <i class="fas fa-plus mr-2"></i>Add Child
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -484,13 +488,7 @@ class SportsTracker {
 
     document.getElementById('app').innerHTML = `
       <div class="mobile-container pb-20">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-1">
-            <i class="fas fa-calendar-plus text-blue-600 mr-2"></i>
-            Add Event
-          </h1>
-          <p class="text-gray-600">Schedule a new game, practice, or tournament</p>
-        </div>
+        ${this.renderPageHeader('Add Event', 'Schedule a new game, practice, or tournament', 'calendar-plus', true)}
 
         <div class="bg-white p-6 rounded-lg shadow-md">
           <form id="addEventForm" class="space-y-4">
@@ -546,9 +544,14 @@ class SportsTracker {
               <label for="is_home" class="text-sm text-gray-700">Home game/event</label>
             </div>
             
-            <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg font-medium text-white">
-              <i class="fas fa-plus mr-2"></i>Add Event
-            </button>
+            <div class="flex gap-3">
+              <button type="button" data-back class="flex-1 py-3 px-4 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" class="flex-1 btn-primary py-3 px-4 rounded-lg font-medium text-white">
+                <i class="fas fa-plus mr-2"></i>Add Event
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -606,6 +609,37 @@ class SportsTracker {
         <i class="fas fa-plus text-xl"></i>
       </button>
     `;
+  }
+
+  renderPageHeader(title, subtitle, icon, showBackButton = false) {
+    if (showBackButton) {
+      return `
+        <div class="mb-6">
+          <div class="flex items-center mb-4">
+            <button data-back class="mr-3 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+              <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+            <div class="flex-1">
+              <h1 class="text-2xl font-bold text-gray-900 mb-1">
+                <i class="fas fa-${icon} text-blue-600 mr-2"></i>
+                ${title}
+              </h1>
+              <p class="text-gray-600">${subtitle}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold text-gray-900 mb-1">
+            <i class="fas fa-${icon} text-blue-600 mr-2"></i>
+            ${title}
+          </h1>
+          <p class="text-gray-600">${subtitle}</p>
+        </div>
+      `;
+    }
   }
 
   logout() {
