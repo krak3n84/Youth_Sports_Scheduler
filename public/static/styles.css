@@ -1,0 +1,147 @@
+/* Sports Tracker Custom Styles */
+
+/* Mobile-first responsive design */
+.mobile-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mobile-container {
+    max-width: 768px;
+    padding: 2rem;
+  }
+}
+
+/* Sports team colors and styling */
+.team-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid #3b82f6;
+}
+
+.team-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.sport-soccer { border-left-color: #22c55e; }
+.sport-football { border-left-color: #f59e0b; }
+.sport-basketball { border-left-color: #ef4444; }
+.sport-baseball { border-left-color: #3b82f6; }
+.sport-track { border-left-color: #8b5cf6; }
+.sport-archery { border-left-color: #06b6d4; }
+
+/* Event type indicators */
+.event-game { 
+  background: linear-gradient(135deg, #ef4444, #dc2626); 
+  color: white;
+}
+.event-practice { 
+  background: linear-gradient(135deg, #3b82f6, #2563eb); 
+  color: white;
+}
+.event-tournament { 
+  background: linear-gradient(135deg, #f59e0b, #d97706); 
+  color: white;
+}
+.event-meet { 
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed); 
+  color: white;
+}
+
+/* Form styling */
+.form-input {
+  transition: all 0.3s ease;
+  border: 2px solid #e5e7eb;
+}
+
+.form-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button animations */
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Mobile navigation */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+.mobile-nav-item {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.mobile-nav-item:hover, .mobile-nav-item.active {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}
+
+/* Floating action button */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  right: 1rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  z-index: 40;
+  cursor: pointer;
+  border: none;
+}
+
+.fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+/* Status indicators */
+.status-attending { color: #22c55e; }
+.status-not_attending { color: #ef4444; }
+.status-pending { color: #f59e0b; }
+
+/* Auth tabs */
+.auth-tab {
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.auth-tab.active {
+  border-bottom-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .hide-mobile { display: none; }
+}
+
+@media (min-width: 641px) {
+  .show-mobile { display: none; }
+  .mobile-nav { display: none; }
+  .fab { bottom: 2rem; }
+}

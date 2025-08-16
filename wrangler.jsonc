@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sports-tracker",
+  "compatibility_date": "2025-08-16",
+  "pages_build_output_dir": "./dist",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sports-tracker-production",
+      "database_id": "7083005a-7f3b-42db-b953-6156b0730dd5"
+    }
+  ]
+}
