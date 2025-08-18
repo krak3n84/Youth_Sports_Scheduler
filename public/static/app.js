@@ -2473,6 +2473,65 @@ class SportsTracker {
     }
   }
 
+  // Save team calendar settings
+  async saveTeamSettings(teamId) {
+    try {
+      const teamCard = document.querySelector(`[data-team-id="${teamId}"]`).closest('.bg-gradient-to-br');
+      const calendarUrl = teamCard.querySelector('[data-field="calendar_url"]').value;
+      const syncEnabled = teamCard.querySelector('[data-field="sync_enabled"]').checked;
+      const assignedChildId = teamCard.querySelector('[data-field="assigned_child_id"]').value;
+      
+      const data = {
+        calendar_url: calendarUrl || '',
+        sync_enabled: syncEnabled,
+        assigned_child_id: assignedChildId ? parseInt(assignedChildId) : null
+      };
+      
+      const response = await axios.put(`/api/teams/${teamId}/calendar`, data);
+      
+      if (response.data.success) {
+        alert('✅ Team calendar settings saved successfully!');
+        // Refresh the team management view to show updated settings
+        this.showTeamManagement();
+      } else {
+        alert('❌ Failed to save team settings');
+      }
+    } catch (error) {
+      alert('❌ Error saving team settings: ' + (error.response?.data?.error || 'Network error'));
+    }
+  }
+  
+  // Sync team calendar events
+  async syncTeamCalendar(teamId) {
+    try {
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>🔄 SYNCING...';
+      button.disabled = true;
+      
+      const response = await axios.post(`/api/teams/${teamId}/sync`);
+      
+      if (response.data.success) {
+        alert(`✅ Calendar sync completed!\n\n📅 ${response.data.synced_events} events imported\n🔄 ${response.data.total_events} total events processed`);
+        
+        // Refresh user data and team management to show updated counts
+        await this.loadUserData();
+        this.showTeamManagement();
+      } else {
+        alert('❌ Calendar sync failed');
+      }
+      
+      button.innerHTML = originalText;
+      button.disabled = false;
+    } catch (error) {
+      alert('❌ Calendar sync error: ' + (error.response?.data?.error || 'Network error'));
+      
+      const button = event.target;
+      button.innerHTML = '<i class="fas fa-sync-alt mr-3"></i>⚡ SYNC EVENTS';
+      button.disabled = false;
+    }
+  }
+
   logout() {
     localStorage.removeItem('sportsTracker_user');
     this.currentUser = null;

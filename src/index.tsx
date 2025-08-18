@@ -29,6 +29,79 @@ app.use('/static/*', serveStatic({ root: './public' }))
 // Use renderer for HTML pages
 app.use(renderer)
 
+// Team logo test page
+app.get('/test-images', (c) => {
+  return c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Logo Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .logo-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+        .logo-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        .logo-img { width: 100px; height: 100px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; }
+        .logo-name { margin: 10px 0 5px 0; font-weight: bold; color: #333; }
+        .logo-url { font-size: 11px; color: #666; word-break: break-all; }
+        h1 { color: #333; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>🏆 Team Logo Test Page</h1>
+    <p>This page tests all 6 team logos used in the Sports Tracker app:</p>
+    
+    <div class="logo-container">
+        <div class="logo-card">
+            <div class="logo-name">Rockvale Soccer Rockets</div>
+            <img src="https://page.gensparksite.com/v1/base64_upload/086ce282d4b237d73225414a5b1c6dd7" alt="Rockvale Soccer" class="logo-img">
+            <div class="logo-url">086ce282d4b237d73225414a5b1c6dd7</div>
+        </div>
+        
+        <div class="logo-card">
+            <div class="logo-name">Tennessee Soccer Club</div>
+            <img src="https://page.gensparksite.com/v1/base64_upload/17d652d4188793aa0018c6eff3d6bd88" alt="Tennessee Soccer" class="logo-img">
+            <div class="logo-url">17d652d4188793aa0018c6eff3d6bd88</div>
+        </div>
+        
+        <div class="logo-card">
+            <div class="logo-name">Rockvale Football</div>
+            <img src="https://page.gensparksite.com/v1/base64_upload/c47910bbfef4ef6e4c909f81d7a5f031" alt="Rockvale Football" class="logo-img">
+            <div class="logo-url">c47910bbfef4ef6e4c909f81d7a5f031</div>
+        </div>
+        
+        <div class="logo-card">
+            <div class="logo-name">MBA Baseball</div>
+            <img src="https://page.gensparksite.com/v1/base64_upload/a3b8e00329a9e42975814c4dbd8d4601" alt="MBA Baseball" class="logo-img">
+            <div class="logo-url">a3b8e00329a9e42975814c4dbd8d4601</div>
+        </div>
+        
+        <div class="logo-card">
+            <div class="logo-name">Rockvale Track Team</div>
+            <img src="https://page.gensparksite.com/v1/base64_upload/e0fb1b8ea116148f87b30b22805040fa" alt="Rockvale Track" class="logo-img">
+            <div class="logo-url">e0fb1b8ea116148f87b30b22805040fa</div>
+        </div>
+        
+        <div class="logo-card">
+            <div class="logo-name">Rockvale Archery</div>
+            <img src="https://page.gensparksite.com/v1/base64_upload/c80963343a866d698b0f83ff431080b2" alt="Rockvale Archery" class="logo-img">
+            <div class="logo-url">c80963343a866d698b0f83ff431080b2</div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; padding: 20px; background: white; border-radius: 8px;">
+        <h3>CSS Background Test:</h3>
+        <div style="width: 100px; height: 100px; background-image: url('https://page.gensparksite.com/v1/base64_upload/086ce282d4b237d73225414a5b1c6dd7'); background-size: contain; background-repeat: no-repeat; background-position: center; border: 1px solid #ddd; margin: 10px 0;"></div>
+        <p>This div uses the Rockvale Soccer logo as a CSS background-image (same method used in the app).</p>
+    </div>
+    
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/" style="color: #3b82f6; text-decoration: none;">← Back to Sports Tracker App</a>
+    </div>
+</body>
+</html>`)
+})
+
 // Main dashboard page
 app.get('/', (c) => {
   return c.render(

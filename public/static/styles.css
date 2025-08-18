@@ -86,7 +86,7 @@
   right: -10px;
   width: 60px;
   height: 60px;
-  opacity: 0.08;
+  opacity: 0.20;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -130,7 +130,7 @@
 
 .floating-logo {
   position: absolute;
-  opacity: 0.02;
+  opacity: 0.12;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -176,19 +176,19 @@
 @keyframes float {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
-    opacity: 0.02;
+    opacity: 0.12;
   }
   25% {
     transform: translateY(-10px) rotate(2deg);
-    opacity: 0.04;
+    opacity: 0.18;
   }
   50% {
     transform: translateY(0px) rotate(0deg);
-    opacity: 0.02;
+    opacity: 0.12;
   }
   75% {
     transform: translateY(-5px) rotate(-1deg);
-    opacity: 0.03;
+    opacity: 0.15;
   }
 }
 
