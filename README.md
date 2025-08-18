@@ -20,7 +20,7 @@
 - ✅ **Back Button Navigation**: Navigate back without exiting the app
 - ✅ **Cancel/Clear Buttons**: Easy form cancellation and clearing
 - ✅ **Real-time Data**: Cloudflare D1 database for persistent storage
-- ✅ **Sample Data**: Pre-loaded with Rockvale teams and sample events matching actual team logos
+- ✅ **Sample Data**: Pre-loaded with Mia and Lane's actual teams and events matching team logos
 
 ## 🌐 URLs
 - **Live Application**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev
@@ -136,7 +136,7 @@ The app includes sample data for:
   - MBA Baseball (matching your logo)
   - Rockvale Archery (matching your logo)
   - Rockvale Track Team (matching your logo)
-- **Sample Children**: Emma (Soccer, Track) and Jake (Football, Baseball, Archery)
+- **Sample Children**: Mia Rylee Craft (Soccer, Track) and Lane Beckett Craft (Football, Baseball, Archery)
 - **Sample Events**: Practices, games, and tournaments for the next few weeks
 - **Demo Account**: `parent@example.com` / `password`
 
