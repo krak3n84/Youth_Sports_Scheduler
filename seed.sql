@@ -22,7 +22,7 @@ INSERT OR IGNORE INTO teams (id, name, sport_id, coach_name, season) VALUES
 
 -- Sample user (parent account) - password is 'password'
 INSERT OR IGNORE INTO users (id, email, name, password_hash) VALUES 
-  (1, 'parent@example.com', 'Parent User', 'cGFzc3dvcmQ=');
+  (1, 'parent@example.com', 'Parent User', '102b83dd9c04b1c60c2a2fae3455ba6835d59aec9ee8fb1854965ee579472dec');
 
 -- Sample children
 INSERT OR IGNORE INTO children (id, user_id, name, birth_date) VALUES 

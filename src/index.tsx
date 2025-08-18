@@ -6,6 +6,20 @@ import { Bindings } from './types'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
+// Simple password hashing function (for demo - use proper bcrypt in production)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password + 'salt_sports_tracker_2024')
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  const hash = await hashPassword(password)
+  return hash === hashedPassword
+}
+
 // Enable CORS for API routes
 app.use('/api/*', cors())
 
@@ -36,8 +50,17 @@ app.post('/api/auth/register', async (c) => {
   try {
     const { email, name, password } = await c.req.json()
     
-    // Simple password hashing (in production, use bcrypt)
-    const password_hash = btoa(password) // Basic encoding - replace with proper hashing
+    // Input validation
+    if (!email || !name || !password) {
+      return c.json({ error: 'Email, name, and password are required' }, 400)
+    }
+    
+    if (password.length < 6) {
+      return c.json({ error: 'Password must be at least 6 characters' }, 400)
+    }
+    
+    // Proper password hashing
+    const password_hash = await hashPassword(password)
     
     const result = await c.env.DB.prepare(`
       INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)
@@ -57,12 +80,19 @@ app.post('/api/auth/login', async (c) => {
   try {
     const { email, password } = await c.req.json()
     
-    const user = await c.env.DB.prepare(`
-      SELECT id, email, name FROM users WHERE email = ? AND password_hash = ?
-    `).bind(email, btoa(password)).first()
+    // Input validation
+    if (!email || !password) {
+      return c.json({ error: 'Email and password are required' }, 400)
+    }
     
-    if (user) {
-      return c.json({ success: true, user })
+    const user = await c.env.DB.prepare(`
+      SELECT id, email, name, password_hash FROM users WHERE email = ?
+    `).bind(email).first()
+    
+    if (user && await verifyPassword(password, user.password_hash)) {
+      // Don't return password_hash to client
+      const { password_hash, ...safeUser } = user
+      return c.json({ success: true, user: safeUser })
     } else {
       return c.json({ error: 'Invalid credentials' }, 401)
     }
@@ -119,6 +149,70 @@ app.post('/api/children', async (c) => {
       return c.json({ success: true, child_id: result.meta.last_row_id })
     } else {
       return c.json({ error: 'Failed to create child profile' }, 400)
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid request' }, 400)
+  }
+})
+
+// Update child profile
+app.put('/api/children/:childId', async (c) => {
+  try {
+    const childId = c.req.param('childId')
+    const { name, photo_url, birth_date } = await c.req.json()
+    
+    const result = await c.env.DB.prepare(`
+      UPDATE children 
+      SET name = ?, photo_url = ?, birth_date = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(name, photo_url || null, birth_date || null, childId).run()
+    
+    if (result.meta.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Child not found' }, 404)
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid request' }, 400)
+  }
+})
+
+// Delete child profile
+app.delete('/api/children/:childId', async (c) => {
+  try {
+    const childId = c.req.param('childId')
+    
+    const result = await c.env.DB.prepare(`
+      DELETE FROM children WHERE id = ?
+    `).bind(childId).run()
+    
+    if (result.meta.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Child not found' }, 404)
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid request' }, 400)
+  }
+})
+
+// Update child team assignment (jersey number, position)
+app.put('/api/child-teams/:childId/:teamId', async (c) => {
+  try {
+    const childId = c.req.param('childId')
+    const teamId = c.req.param('teamId')
+    const { jersey_number, position, active } = await c.req.json()
+    
+    const result = await c.env.DB.prepare(`
+      UPDATE child_teams 
+      SET jersey_number = ?, position = ?, active = ?
+      WHERE child_id = ? AND team_id = ?
+    `).bind(jersey_number || null, position || null, active !== undefined ? active : true, childId, teamId).run()
+    
+    if (result.meta.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Team assignment not found' }, 404)
     }
   } catch (error) {
     return c.json({ error: 'Invalid request' }, 400)
@@ -222,6 +316,74 @@ app.post('/api/events', async (c) => {
   }
 })
 
+// Get single event details
+app.get('/api/events/:eventId', async (c) => {
+  try {
+    const eventId = c.req.param('eventId')
+    
+    const event = await c.env.DB.prepare(`
+      SELECT e.*, t.name as team_name, s.name as sport_name
+      FROM events e
+      JOIN teams t ON e.team_id = t.id
+      JOIN sports s ON t.sport_id = s.id
+      WHERE e.id = ?
+    `).bind(eventId).first()
+    
+    if (!event) {
+      return c.json({ error: 'Event not found' }, 404)
+    }
+    
+    return c.json(event)
+  } catch (error) {
+    return c.json({ error: 'Invalid request' }, 400)
+  }
+})
+
+// Update event
+app.put('/api/events/:eventId', async (c) => {
+  try {
+    const eventId = c.req.param('eventId')
+    const { type, title, description, event_date, start_time, end_time, location, opponent, is_home, reminder_minutes } = await c.req.json()
+    
+    const result = await c.env.DB.prepare(`
+      UPDATE events 
+      SET type = ?, title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?, 
+          location = ?, opponent = ?, is_home = ?, reminder_minutes = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      type, title, description || null, event_date, start_time, end_time || null,
+      location || null, opponent || null, is_home || false, reminder_minutes || 60, eventId
+    ).run()
+    
+    if (result.meta.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Event not found' }, 404)
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid request' }, 400)
+  }
+})
+
+// Delete event
+app.delete('/api/events/:eventId', async (c) => {
+  try {
+    const eventId = c.req.param('eventId')
+    
+    const result = await c.env.DB.prepare(`
+      DELETE FROM events WHERE id = ?
+    `).bind(eventId).run()
+    
+    if (result.meta.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Event not found' }, 404)
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid request' }, 400)
+  }
+})
+
 // Calendar view - get events for all children of a user
 app.get('/api/calendar/:userId', async (c) => {
   const userId = c.req.param('userId')
@@ -230,8 +392,9 @@ app.get('/api/calendar/:userId', async (c) => {
   
   let query = `
     SELECT e.id, e.title, e.event_date as date, e.start_time, e.end_time, e.type,
-           e.location, e.opponent, e.is_home,
+           e.location, e.opponent, e.is_home, e.source,
            t.name as team_name, c.name as child_name,
+           ct.jersey_number, ct.position,
            ea.status as attendance_status
     FROM events e
     JOIN teams t ON e.team_id = t.id
@@ -283,15 +446,17 @@ app.put('/api/attendance/:eventId/:childId', async (c) => {
 app.put('/api/teams/:teamId/calendar', async (c) => {
   try {
     const teamId = c.req.param('teamId')
-    const { calendar_url, sync_enabled } = await c.req.json()
+    const { calendar_url, sync_enabled, assigned_child_id } = await c.req.json()
+    
+
     
     const result = await c.env.DB.prepare(`
       UPDATE teams 
-      SET calendar_url = ?, sync_enabled = ?
+      SET calendar_url = ?, sync_enabled = ?, assigned_child_id = ?
       WHERE id = ?
-    `).bind(calendar_url || null, sync_enabled ? 1 : 0, teamId).run()
+    `).bind(calendar_url || null, sync_enabled ? 1 : 0, assigned_child_id || null, teamId).run()
     
-    if (result.changes > 0) {
+    if (result.meta.changes > 0) {
       return c.json({ success: true })
     } else {
       return c.json({ error: 'Team not found' }, 404)
@@ -316,8 +481,11 @@ app.post('/api/teams/:teamId/sync', async (c) => {
     }
     
     try {
+      // Convert webcal:// URLs to https:// for fetch compatibility
+      const calendarUrl = team.calendar_url.replace(/^webcal:\/\//, 'https://')
+      
       // Fetch calendar data
-      const response = await fetch(team.calendar_url)
+      const response = await fetch(calendarUrl)
       if (!response.ok) {
         throw new Error(`Failed to fetch calendar: ${response.status}`)
       }
@@ -400,7 +568,7 @@ app.get('/api/teams/:teamId/sync-status', async (c) => {
   const teamId = c.req.param('teamId')
   
   const team = await c.env.DB.prepare(`
-    SELECT calendar_url, sync_enabled, last_sync FROM teams WHERE id = ?
+    SELECT calendar_url, sync_enabled, last_sync, assigned_child_id FROM teams WHERE id = ?
   `).bind(teamId).first()
   
   if (!team) {
@@ -415,6 +583,7 @@ app.get('/api/teams/:teamId/sync-status', async (c) => {
     calendar_url: team.calendar_url,
     sync_enabled: team.sync_enabled,
     last_sync: team.last_sync,
+    assigned_child_id: team.assigned_child_id,
     imported_events: eventCount.count
   })
 })
@@ -422,7 +591,8 @@ app.get('/api/teams/:teamId/sync-status', async (c) => {
 // Simple iCal parser function
 function parseICalData(icalData, teamId) {
   const events = []
-  const lines = icalData.split('\\n').map(line => line.trim())
+  // Handle both Windows (\r\n) and Unix (\n) line endings
+  const lines = icalData.split(/\r?\n/).map(line => line.trim())
   
   let currentEvent = null
   
@@ -518,5 +688,229 @@ function parseICalDateTime(icalDateTime) {
   
   return null
 }
+
+// ==========================================
+// NOTIFICATION SYSTEM API ENDPOINTS
+// ==========================================
+
+// Get user notification settings
+app.get('/api/notifications/settings/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    
+    const userSettings = await c.env.DB.prepare(`
+      SELECT * FROM user_notification_settings WHERE user_id = ?
+    `).bind(userId).first()
+    
+    const childrenSettings = await c.env.DB.prepare(`
+      SELECT cns.*, c.name as child_name 
+      FROM child_notification_settings cns
+      JOIN children c ON cns.child_id = c.id
+      WHERE c.user_id = ?
+    `).bind(userId).all()
+    
+    return c.json({
+      user_settings: userSettings,
+      children_settings: childrenSettings.results || []
+    })
+  } catch (error) {
+    return c.json({ error: 'Failed to load notification settings' }, 500)
+  }
+})
+
+// Update user notification settings
+app.put('/api/notifications/settings/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    const {
+      daily_reminder_enabled,
+      daily_reminder_time,
+      pre_event_reminder_enabled,
+      pre_event_reminder_minutes,
+      email_notifications,
+      push_notifications,
+      sms_notifications,
+      timezone
+    } = await c.req.json()
+    
+    const result = await c.env.DB.prepare(`
+      UPDATE user_notification_settings 
+      SET daily_reminder_enabled = ?, daily_reminder_time = ?, 
+          pre_event_reminder_enabled = ?, pre_event_reminder_minutes = ?,
+          email_notifications = ?, push_notifications = ?, sms_notifications = ?,
+          timezone = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = ?
+    `).bind(
+      daily_reminder_enabled ? 1 : 0,
+      daily_reminder_time,
+      pre_event_reminder_enabled ? 1 : 0,
+      pre_event_reminder_minutes,
+      email_notifications ? 1 : 0,
+      push_notifications ? 1 : 0,
+      sms_notifications ? 1 : 0,
+      timezone,
+      userId
+    ).run()
+    
+    if (result.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Settings not found' }, 404)
+    }
+  } catch (error) {
+    return c.json({ error: 'Failed to update notification settings' }, 500)
+  }
+})
+
+// Update child notification settings
+app.put('/api/notifications/child-settings/:childId', async (c) => {
+  try {
+    const childId = c.req.param('childId')
+    const {
+      daily_reminder_enabled,
+      pre_event_reminder_enabled,
+      notification_email,
+      notification_phone
+    } = await c.req.json()
+    
+    const result = await c.env.DB.prepare(`
+      UPDATE child_notification_settings 
+      SET daily_reminder_enabled = ?, pre_event_reminder_enabled = ?,
+          notification_email = ?, notification_phone = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE child_id = ?
+    `).bind(
+      daily_reminder_enabled ? 1 : 0,
+      pre_event_reminder_enabled ? 1 : 0,
+      notification_email,
+      notification_phone,
+      childId
+    ).run()
+    
+    if (result.changes > 0) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Child settings not found' }, 404)
+    }
+  } catch (error) {
+    return c.json({ error: 'Failed to update child notification settings' }, 500)
+  }
+})
+
+// Register push notification token
+app.post('/api/notifications/register-token', async (c) => {
+  try {
+    const { user_id, token, device_type, device_name } = await c.req.json()
+    
+    // Deactivate existing tokens for this user/device combo
+    await c.env.DB.prepare(`
+      UPDATE push_notification_tokens 
+      SET active = false 
+      WHERE user_id = ? AND device_type = ?
+    `).bind(user_id, device_type).run()
+    
+    // Insert new token
+    const result = await c.env.DB.prepare(`
+      INSERT INTO push_notification_tokens (user_id, token, device_type, device_name)
+      VALUES (?, ?, ?, ?)
+    `).bind(user_id, token, device_type, device_name).run()
+    
+    return c.json({ success: true, token_id: result.meta.last_row_id })
+  } catch (error) {
+    return c.json({ error: 'Failed to register push token' }, 500)
+  }
+})
+
+// Schedule notifications for upcoming events
+app.post('/api/notifications/schedule/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    
+    // Get user notification settings and email
+    const userSettings = await c.env.DB.prepare(`
+      SELECT uns.*, u.email 
+      FROM user_notification_settings uns
+      JOIN users u ON uns.user_id = u.id
+      WHERE uns.user_id = ?
+    `).bind(userId).first()
+    
+    if (!userSettings) {
+      return c.json({ error: 'User notification settings not found' }, 404)
+    }
+    
+    // Get upcoming events for the next 7 days
+    const upcomingEvents = await c.env.DB.prepare(`
+      SELECT e.*, c.id as child_id, c.name as child_name, t.name as team_name, s.name as sport_name
+      FROM events e
+      JOIN child_teams ct ON e.team_id = ct.team_id
+      JOIN children c ON ct.child_id = c.id
+      JOIN teams t ON e.team_id = t.id
+      JOIN sports s ON t.sport_id = s.id
+      WHERE c.user_id = ? 
+        AND e.event_date >= date('now') 
+        AND e.event_date <= date('now', '+7 days')
+        AND ct.active = true
+      ORDER BY e.event_date, e.start_time
+    `).bind(userId).all()
+    
+    let scheduledCount = 0
+    
+    for (const event of upcomingEvents.results || []) {
+      // Schedule pre-event reminder if enabled
+      if (userSettings.pre_event_reminder_enabled) {
+        const eventDateTime = new Date(`${event.event_date}T${event.start_time}`)
+        const reminderTime = new Date(eventDateTime.getTime() - (userSettings.pre_event_reminder_minutes * 60 * 1000))
+        
+        if (reminderTime > new Date()) {
+          await c.env.DB.prepare(`
+            INSERT INTO notification_log 
+            (user_id, child_id, event_id, notification_type, delivery_method, recipient, subject, message, scheduled_for)
+            VALUES (?, ?, ?, 'pre_event_reminder', 'email', ?, ?, ?, ?)
+          `).bind(
+            userId,
+            event.child_id,
+            event.id,
+            userSettings.email,
+            `${event.child_name} - ${event.team_name} Event Reminder`,
+            `Reminder: ${event.child_name} has ${event.title} at ${event.start_time} today for ${event.team_name} (${event.sport_name})`,
+            reminderTime.toISOString()
+          ).run()
+          
+          scheduledCount++
+        }
+      }
+    }
+    
+    return c.json({ 
+      success: true, 
+      scheduled_notifications: scheduledCount,
+      message: `Scheduled ${scheduledCount} notifications for upcoming events`
+    })
+  } catch (error) {
+    return c.json({ error: 'Failed to schedule notifications' }, 500)
+  }
+})
+
+// Get notification history/log
+app.get('/api/notifications/history/:userId', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    const limit = c.req.query('limit') || '50'
+    
+    const notifications = await c.env.DB.prepare(`
+      SELECT nl.*, c.name as child_name, e.title as event_title
+      FROM notification_log nl
+      LEFT JOIN children c ON nl.child_id = c.id
+      LEFT JOIN events e ON nl.event_id = e.id
+      WHERE nl.user_id = ?
+      ORDER BY nl.created_at DESC
+      LIMIT ?
+    `).bind(userId, parseInt(limit)).all()
+    
+    return c.json({ notifications: notifications.results || [] })
+  } catch (error) {
+    return c.json({ error: 'Failed to load notification history' }, 500)
+  }
+})
 
 export default app

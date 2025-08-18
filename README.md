@@ -6,23 +6,33 @@
 - **Features**: Child profiles, team management, event scheduling, calendar views, attendance tracking
 
 ## 🏆 Currently Completed Features
-- ✅ **User Authentication**: Parent account creation and login system
+- ✅ **User Authentication**: Parent account creation and login system with SHA-256 password hashing
 - ✅ **Child Profile Management**: Add and manage multiple children with birth dates
 - ✅ **Team & Sports Management**: Assign children to teams with jersey numbers and positions
 - ✅ **Calendar Integration**: Import events directly from team calendar URLs (iCal/ICS)
 - ✅ **Event Scheduling**: Create games, practices, tournaments, and meets
 - ✅ **Calendar View**: Family calendar with all children's events
 - ✅ **Attendance Tracking**: Mark attendance status for each event
+- ✅ **Team Logo Integration**: Dynamic background system with actual team logos throughout the app
+- ✅ **Smart Team Styling**: Event cards and team displays automatically styled with team-specific logos
+- ✅ **Floating Logo Animations**: Subtle background team logo animations on dashboard
 - ✅ **Mobile-Responsive UI**: Clean mobile-first design with bottom navigation
 - ✅ **Back Button Navigation**: Navigate back without exiting the app
 - ✅ **Cancel/Clear Buttons**: Easy form cancellation and clearing
 - ✅ **Real-time Data**: Cloudflare D1 database for persistent storage
-- ✅ **Sample Data**: Pre-loaded with Rockvale teams and sample events
+- ✅ **Sample Data**: Pre-loaded with Rockvale teams and sample events matching actual team logos
 
 ## 🌐 URLs
 - **Live Application**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev
 - **API Health Check**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev/api/health
 - **Local Development**: http://localhost:3000
+
+## 🎨 Team Logo Integration
+- **6 Actual Team Logos**: Incorporated real uploaded team logos (MBA Baseball, Rockvale Football/Soccer/Archery/Track, Tennessee Soccer Club)
+- **Dynamic Backgrounds**: Page backgrounds automatically adapt based on team/sport context
+- **Floating Animations**: Subtle team logo animations throughout the interface
+- **Team-Specific Cards**: Events and team displays include team-specific logo overlays
+- **Smart Logo Matching**: Automatic team name matching to apply appropriate styling
 
 ## 📱 Functional Entry URIs
 - **`/`** - Main dashboard with overview of children and upcoming events

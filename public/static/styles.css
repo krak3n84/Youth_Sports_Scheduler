@@ -1,10 +1,204 @@
 /* Sports Tracker Custom Styles */
 
+/* Team Logo Background System */
+.app-background {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.app-background::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.03;
+  background-image: 
+    url('https://page.gensparksite.com/v1/base64_upload/c80963343a866d698b0f83ff431080b2'),
+    url('https://page.gensparksite.com/v1/base64_upload/086ce282d4b237d73225414a5b1c6dd7'),
+    url('https://page.gensparksite.com/v1/base64_upload/17d652d4188793aa0018c6eff3d6bd88');
+  background-size: 120px, 100px, 150px;
+  background-repeat: no-repeat;
+  background-position: 
+    top 10% right 10%,
+    top 30% left 15%,
+    bottom 20% right 20%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Team-specific page backgrounds */
+.page-soccer .app-background::before {
+  background-image: 
+    url('https://page.gensparksite.com/v1/base64_upload/086ce282d4b237d73225414a5b1c6dd7'),
+    url('https://page.gensparksite.com/v1/base64_upload/17d652d4188793aa0018c6eff3d6bd88');
+  background-size: 140px, 160px;
+  background-position: 
+    top 15% right 8%,
+    bottom 25% left 8%;
+  opacity: 0.05;
+}
+
+.page-football .app-background::before {
+  background-image: 
+    url('https://page.gensparksite.com/v1/base64_upload/c47910bbfef4ef6e4c909f81d7a5f031');
+  background-size: 130px;
+  background-position: top 20% right 10%;
+  opacity: 0.04;
+}
+
+.page-baseball .app-background::before {
+  background-image: 
+    url('https://page.gensparksite.com/v1/base64_upload/a3b8e00329a9e42975814c4dbd8d4601');
+  background-size: 110px;
+  background-position: bottom 30% left 12%;
+  opacity: 0.04;
+}
+
+.page-track .app-background::before {
+  background-image: 
+    url('https://page.gensparksite.com/v1/base64_upload/e0fb1b8ea116148f87b30b22805040fa');
+  background-size: 120px;
+  background-position: top 25% left 10%;
+  opacity: 0.04;
+}
+
+.page-archery .app-background::before {
+  background-image: 
+    url('https://page.gensparksite.com/v1/base64_upload/c80963343a866d698b0f83ff431080b2');
+  background-size: 140px;
+  background-position: bottom 20% right 15%;
+  opacity: 0.04;
+}
+
+/* Dynamic logo overlay for cards */
+.team-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.team-card::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 60px;
+  height: 60px;
+  opacity: 0.08;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+}
+
+.team-card.rockvale-soccer::before {
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/086ce282d4b237d73225414a5b1c6dd7');
+}
+
+.team-card.tennessee-soccer::before {
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/17d652d4188793aa0018c6eff3d6bd88');
+}
+
+.team-card.rockvale-football::before {
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/c47910bbfef4ef6e4c909f81d7a5f031');
+}
+
+.team-card.mba-baseball::before {
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/a3b8e00329a9e42975814c4dbd8d4601');
+}
+
+.team-card.rockvale-track::before {
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/e0fb1b8ea116148f87b30b22805040fa');
+}
+
+.team-card.rockvale-archery::before {
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/c80963343a866d698b0f83ff431080b2');
+}
+
+/* Floating team logos for dashboard */
+.dashboard-floating-logos {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.floating-logo {
+  position: absolute;
+  opacity: 0.02;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  animation: float 20s infinite linear;
+}
+
+.floating-logo:nth-child(1) {
+  top: 10%;
+  left: 5%;
+  width: 80px;
+  height: 80px;
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/a3b8e00329a9e42975814c4dbd8d4601');
+  animation-delay: 0s;
+}
+
+.floating-logo:nth-child(2) {
+  top: 60%;
+  right: 8%;
+  width: 100px;
+  height: 100px;
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/086ce282d4b237d73225414a5b1c6dd7');
+  animation-delay: -5s;
+}
+
+.floating-logo:nth-child(3) {
+  bottom: 25%;
+  left: 10%;
+  width: 90px;
+  height: 90px;
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/e0fb1b8ea116148f87b30b22805040fa');
+  animation-delay: -10s;
+}
+
+.floating-logo:nth-child(4) {
+  top: 35%;
+  right: 15%;
+  width: 70px;
+  height: 70px;
+  background-image: url('https://page.gensparksite.com/v1/base64_upload/c47910bbfef4ef6e4c909f81d7a5f031');
+  animation-delay: -15s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.02;
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+    opacity: 0.04;
+  }
+  50% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.02;
+  }
+  75% {
+    transform: translateY(-5px) rotate(-1deg);
+    opacity: 0.03;
+  }
+}
+
 /* Mobile-first responsive design */
 .mobile-container {
   max-width: 100%;
   margin: 0 auto;
   padding: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 768px) {
