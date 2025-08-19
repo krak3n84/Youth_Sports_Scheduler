@@ -23,6 +23,7 @@
 - ✅ **Sample Data**: Pre-loaded with Mia and Lane's actual teams and events matching team logos
 
 ## 🌐 URLs
+- **GitHub Repository**: https://github.com/krak3n84/Youth_Sports_Scheduler
 - **Live Application**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev
 - **API Health Check**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev/api/health
 - **Local Development**: http://localhost:3000
@@ -90,7 +91,7 @@
 ## 👨‍👩‍👧‍👦 User Guide
 1. **Getting Started**: 
    - Visit https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev
-   - Login with: `parent@example.com` / `password` (demo account)
+   - Login with: `Casey.craft1226@gmail.com` / `mia31211`
 2. **Add Children**: Go to Children tab and add your kids with their birth dates
 3. **Set Up Calendar Integration**:
    - Go to Children → "Manage Teams" button
