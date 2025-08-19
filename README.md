@@ -1,9 +1,26 @@
-# Sports Tracker - Family Sports Management App
+# Youth Sports Scheduler
+
+> **A Complete Family Sports Management Solution**  
+> Mobile-first web application for tracking children's sporting activities with automated calendar integration, team management, and professional UI.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?logo=cloudflare&logoColor=white)](https://www.cloudflare.com/)
+[![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono&logoColor=white)](https://hono.dev/)
+
+## ✨ Why This Project?
+Managing multiple children's sports schedules is challenging. This app solves that by:
+- **🔄 Automatically importing** team calendars from coaching platforms
+- **📱 Providing mobile-first** interface for busy parents  
+- **👨‍👩‍👧‍👦 Managing multiple children** and their teams in one place
+- **🎨 Beautiful team logo integration** throughout the interface
+- **⚡ Fast, modern tech stack** built on Cloudflare's edge network
 
 ## Project Overview
-- **Name**: Sports Tracker
-- **Goal**: Create an easy-to-use mobile app that helps parents track and manage sporting events and schedules for their children
-- **Features**: Child profiles, team management, event scheduling, calendar views, attendance tracking
+- **Name**: Youth Sports Scheduler
+- **Goal**: A complete, production-ready mobile web application that helps families track and manage their children's sporting activities
+- **Features**: Child profiles, team management, automated calendar sync, event scheduling, attendance tracking, team logo integration
+- **Template Ready**: Sanitized for public use - customize with your family's information
 
 ## 🏆 Currently Completed Features
 - ✅ **User Authentication**: Parent account creation and login system with SHA-256 password hashing
@@ -24,9 +41,8 @@
 
 ## 🌐 URLs
 - **GitHub Repository**: https://github.com/krak3n84/Youth_Sports_Scheduler
-- **Live Application**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev
-- **API Health Check**: https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev/api/health
-- **Local Development**: http://localhost:3000
+- **Local Development**: http://localhost:3000 (after setup)
+- **API Health Check**: http://localhost:3000/api/health (after setup)
 
 ## 🎨 Team Logo Integration
 - **6 Actual Team Logos**: Incorporated real uploaded team logos (MBA Baseball, Rockvale Football/Soccer/Archery/Track, Tennessee Soccer Club)
@@ -90,8 +106,8 @@
 
 ## 👨‍👩‍👧‍👦 User Guide
 1. **Getting Started**: 
-   - Visit https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev
-   - Login with: `Casey.craft1226@gmail.com` / `mia31211`
+   - Deploy the application to your preferred platform
+   - Login with: `parent@example.com` / `password` (demo account)
 2. **Add Children**: Go to Children tab and add your kids with their birth dates
 3. **Set Up Calendar Integration**:
    - Go to Children → "Manage Teams" button
@@ -111,20 +127,60 @@
 - **Last Updated**: August 16, 2025
 
 ## 🛠️ Development Setup
-```bash
-# The app is already running! To restart:
-cd /home/user/webapp
 
-# Clean port and restart
-npm run clean-port
-pm2 restart sports-tracker
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Cloudflare account (for D1 database and Pages deployment)
+
+### Local Development
+```bash
+# Clone the repository
+git clone https://github.com/krak3n84/Youth_Sports_Scheduler.git
+cd Youth_Sports_Scheduler
+
+# Install dependencies
+npm install
+
+# Set up local database
+npx wrangler d1 create sports-tracker-production
+npx wrangler d1 migrations apply sports-tracker-production --local
+npx wrangler d1 execute sports-tracker-production --local --file=./seed.sql
+
+# Build the application
+npm run build
+
+# Start development server (uses PM2)
+pm2 start ecosystem.config.cjs
 
 # Check status
 pm2 status
 pm2 logs sports-tracker --nostream
 
 # Test locally
-npm run test
+curl http://localhost:3000/api/health
+```
+
+### Production Deployment (Cloudflare Pages)
+```bash
+# Set up Cloudflare API token first
+export CLOUDFLARE_API_TOKEN="your-api-token"
+
+# Create production database
+npx wrangler d1 create sports-tracker-production
+# Copy database_id to wrangler.jsonc
+
+# Apply migrations to production
+npx wrangler d1 migrations apply sports-tracker-production
+
+# Create Cloudflare Pages project
+npx wrangler pages project create youth-sports-scheduler \
+  --production-branch main \
+  --compatibility-date 2024-01-01
+
+# Deploy
+npm run build
+npx wrangler pages deploy dist --project-name youth-sports-scheduler
 ```
 
 ## 📦 Sample Data Included
@@ -137,9 +193,9 @@ The app includes sample data for:
   - MBA Baseball (matching your logo)
   - Rockvale Archery (matching your logo)
   - Rockvale Track Team (matching your logo)
-- **Sample Children**: Mia Rylee Craft (Soccer, Track) and Lane Beckett Craft (Football, Baseball, Archery)
+- **Sample Children**: Emma Johnson (Soccer, Track) and Jake Johnson (Football, Baseball, Archery)
 - **Sample Events**: Practices, games, and tournaments for the next few weeks
-- **Demo Account**: `parent@example.com` / `password`
+- **Demo Account**: `parent@example.com` / `password` (change in production)
 
 ## 🎨 Design Features
 - **Mobile-First**: Optimized for mobile devices with touch-friendly interface
@@ -155,10 +211,12 @@ The app includes sample data for:
 - **Professional UI**: Clean, modern interface with TailwindCSS styling
 
 ## 🎯 Ready to Use!
-Your Sports Tracker app is fully functional and running at:
-**https://3000-ije3ipjw27076sjcfjh4i-6532622b.e2b.dev**
+This Sports Tracker app is a complete template ready for deployment. After setting up your development environment or deploying to Cloudflare Pages, you can:
 
-Try logging in with the demo account and explore all the features. The app includes sample data that matches your team logos, so you can see exactly how it works with real sports data!
+1. **Login with demo account**: `parent@example.com` / `password`
+2. **Explore sample data**: Emma and Jake Johnson with their teams
+3. **Test calendar integration**: Try the team calendar sync features
+4. **Customize for your family**: Replace demo data with your actual family information
 
 ## 📅 **Calendar Integration - Game Changer Feature!**
 
@@ -194,6 +252,69 @@ The system automatically:
 
 **No more manual data entry!** This feature alone saves hours of work per season.
 
+## 🎛️ Customization Guide
+
+### Replace Demo Data with Your Information
+
+1. **Update User Account** (in `seed.sql`):
+   ```sql
+   -- Replace with your email and generate new password hash
+   INSERT OR IGNORE INTO users (id, email, name, password_hash) VALUES 
+     (1, 'your-email@example.com', 'Your Name', 'your-hashed-password');
+   ```
+
+2. **Add Your Children** (in `seed.sql`):
+   ```sql
+   -- Replace with your children's information
+   INSERT OR IGNORE INTO children (id, user_id, name, birth_date) VALUES 
+     (1, 1, 'Your Child 1', 'YYYY-MM-DD'),
+     (2, 1, 'Your Child 2', 'YYYY-MM-DD');
+   ```
+
+3. **Update Teams** (in `seed.sql`):
+   ```sql
+   -- Add your actual teams
+   INSERT OR IGNORE INTO teams (id, name, sport_id, coach_name, season) VALUES 
+     (1, 'Your Team Name', sport_id, 'Coach Name', 'Season');
+   ```
+
+4. **Team Logo Integration** (in `public/static/styles.css`):
+   - Upload your team logos to image hosting
+   - Update CSS classes with your logo URLs:
+   ```css
+   .your-team-class::before {
+     background-image: url('https://your-image-url.com/logo.png');
+   }
+   ```
+
+5. **Update Team Assignment** (in `seed.sql`):
+   ```sql
+   -- Assign your children to their actual teams
+   INSERT OR IGNORE INTO child_teams (child_id, team_id, jersey_number, active) VALUES 
+     (1, 1, jersey_number, true);
+   ```
+
+### Password Hashing
+To generate password hashes for new users:
+```javascript
+// Use this in browser console or Node.js
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'salt_sports_tracker_2024');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Usage
+hashPassword('your-password').then(console.log);
+```
+
+## 📄 License
+
+MIT License - feel free to use this project for your family or contribute improvements!
+
 ---
 
-This is a complete, production-ready sports management solution for parents to track their children's activities with a professional mobile interface and revolutionary calendar integration.
+**Built with ❤️ for busy sports families**  
+*A complete, production-ready sports management solution that saves time and keeps families organized.*

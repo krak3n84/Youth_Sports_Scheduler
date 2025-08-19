@@ -26,21 +26,21 @@ INSERT OR IGNORE INTO users (id, email, name, password_hash) VALUES
 
 -- Sample children
 INSERT OR IGNORE INTO children (id, user_id, name, birth_date) VALUES 
-  (1, 1, 'Mia Rylee Craft', '2010-05-15'),
-  (2, 1, 'Lane Beckett Craft', '2008-09-22');
+  (1, 1, 'Emma Johnson', '2012-03-15'),
+  (2, 1, 'Jake Johnson', '2010-07-22');
 
 -- Sample child-team associations
--- Mia: Rockvale Soccer, Track, TSC Soccer
+-- Emma: Soccer and Track
 INSERT OR IGNORE INTO child_teams (child_id, team_id, jersey_number, active) VALUES 
-  (1, 1, 12, true),  -- Mia - Rockvale Soccer
-  (1, 2, 8, true),   -- Mia - TSC Soccer
-  (1, 6, NULL, true); -- Mia - Track Team
+  (1, 1, 15, true),  -- Emma - Rockvale Soccer
+  (1, 2, 9, true),   -- Emma - TSC Soccer
+  (1, 6, NULL, true); -- Emma - Track Team
 
--- Lane: Rockvale Football, Archery, MBA Baseball
+-- Jake: Football, Baseball, and Archery
 INSERT OR IGNORE INTO child_teams (child_id, team_id, jersey_number, active) VALUES 
-  (2, 3, 24, true),  -- Lane - Rockvale Football
-  (2, 4, 15, true),  -- Lane - MBA Baseball
-  (2, 5, NULL, true); -- Lane - Archery
+  (2, 3, 22, true),  -- Jake - Rockvale Football
+  (2, 4, 11, true),  -- Jake - MBA Baseball
+  (2, 5, NULL, true); -- Jake - Archery
 
 -- Sample events for the next few weeks
 INSERT OR IGNORE INTO events (team_id, type, title, event_date, start_time, end_time, location, opponent, is_home) VALUES 
