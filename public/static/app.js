@@ -53,6 +53,23 @@ class SportsTracker {
         e.preventDefault();
         this.goBack();
       }
+
+      // User menu dropdown toggle
+      if (e.target.matches('.user-menu-toggle') || e.target.closest('.user-menu-toggle')) {
+        e.preventDefault();
+        const dropdown = document.querySelector('.user-dropdown');
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+        }
+      }
+
+      // Close dropdown when clicking outside
+      if (!e.target.closest('.user-menu-toggle') && !e.target.closest('.user-dropdown')) {
+        const dropdown = document.querySelector('.user-dropdown');
+        if (dropdown) {
+          dropdown.classList.add('hidden');
+        }
+      }
     });
 
     // Forms
@@ -353,7 +370,50 @@ class SportsTracker {
           <div class="floating-logo"></div>
         </div>
         
-        ${this.renderPageHeader(`Welcome back, ${this.currentUser.name}!`, 'Manage your family\'s sports activities', 'trophy', false)}
+        <!-- Enhanced Header with User Menu -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex-1">
+              <h1 class="text-2xl font-bold text-gray-900 mb-1">
+                <i class="fas fa-trophy text-blue-600 mr-2"></i>
+                Welcome back, ${this.currentUser.name}!
+              </h1>
+              <p class="text-gray-600">Manage your family's sports activities</p>
+            </div>
+            <!-- User Profile Menu -->
+            <div class="relative">
+              <button class="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 user-menu-toggle">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  ${this.currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <span class="text-sm font-medium text-gray-700">${this.currentUser.name}</span>
+                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+              </button>
+              <!-- Dropdown Menu -->
+              <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 user-dropdown hidden">
+                <div class="py-2">
+                  <div class="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
+                    Signed in as<br>
+                    <span class="font-medium text-gray-700">${this.currentUser.email}</span>
+                  </div>
+                  <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center">
+                    <i class="fas fa-user mr-2 text-gray-400"></i>
+                    Profile Settings
+                  </button>
+                  <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center">
+                    <i class="fas fa-cog mr-2 text-gray-400"></i>
+                    App Preferences
+                  </button>
+                  <div class="border-t border-gray-100 my-1"></div>
+                  <button class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" data-nav="logout">
+                    <i class="fas fa-sign-out-alt mr-2 text-red-500"></i>
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Quick Stats -->
         <div class="grid grid-cols-2 gap-4 mb-6">
@@ -2563,10 +2623,84 @@ class SportsTracker {
   }
 
   logout() {
+    // Confirmation dialog
+    const confirmed = confirm('Are you sure you want to log out?');
+    if (!confirmed) {
+      return; // User cancelled logout
+    }
+
+    try {
+      // Show loading feedback
+      const logoutBtn = document.querySelector('[data-nav="logout"]');
+      if (logoutBtn) {
+        const originalContent = logoutBtn.innerHTML;
+        logoutBtn.innerHTML = `
+          <i class="fas fa-spinner fa-spin text-lg mb-1"></i>
+          <div class="text-xs">Logging out...</div>
+        `;
+        
+        // Add slight delay for better UX
+        setTimeout(() => {
+          // Clear user session
+          localStorage.removeItem('sportsTracker_user');
+          this.currentUser = null;
+          this.children = [];
+          this.events = [];
+          
+          // Clear any cached data
+          this.sports = [];
+          this.teams = [];
+          
+          // Reset current view
+          this.currentView = 'dashboard';
+          this.previousView = 'dashboard';
+          
+          // Show success message
+          console.log('User logged out successfully');
+          
+          // Navigate to auth screen
+          this.showAuth();
+          
+          // Optional: Show temporary success message
+          setTimeout(() => {
+            const authContainer = document.getElementById('app');
+            if (authContainer) {
+              const successMsg = document.createElement('div');
+              successMsg.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+              successMsg.textContent = 'Successfully logged out!';
+              document.body.appendChild(successMsg);
+              
+              // Remove message after 3 seconds
+              setTimeout(() => {
+                if (successMsg.parentNode) {
+                  successMsg.parentNode.removeChild(successMsg);
+                }
+              }, 3000);
+            }
+          }, 100);
+          
+        }, 500); // Small delay for better UX
+      } else {
+        // Fallback if no logout button found
+        this.performLogout();
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Fallback logout
+      this.performLogout();
+    }
+  }
+
+  // Helper method for clean logout
+  performLogout() {
     localStorage.removeItem('sportsTracker_user');
     this.currentUser = null;
     this.children = [];
     this.events = [];
+    this.sports = [];
+    this.teams = [];
+    this.currentView = 'dashboard';
+    this.previousView = 'dashboard';
     this.showAuth();
   }
 }
