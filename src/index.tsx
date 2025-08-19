@@ -152,9 +152,11 @@ app.post('/api/auth/register', async (c) => {
 app.post('/api/auth/login', async (c) => {
   try {
     const { email, password } = await c.req.json()
+    console.log('Login attempt:', email, 'password length:', password?.length)
     
     // Input validation
     if (!email || !password) {
+      console.log('Missing email or password')
       return c.json({ error: 'Email and password are required' }, 400)
     }
     
@@ -162,14 +164,24 @@ app.post('/api/auth/login', async (c) => {
       SELECT id, email, name, password_hash FROM users WHERE email = ?
     `).bind(email).first()
     
-    if (user && await verifyPassword(password, user.password_hash)) {
-      // Don't return password_hash to client
-      const { password_hash, ...safeUser } = user
-      return c.json({ success: true, user: safeUser })
-    } else {
-      return c.json({ error: 'Invalid credentials' }, 401)
+    console.log('User found:', !!user, user?.email)
+    
+    if (user) {
+      const passwordValid = await verifyPassword(password, user.password_hash)
+      console.log('Password valid:', passwordValid)
+      
+      if (passwordValid) {
+        // Don't return password_hash to client
+        const { password_hash, ...safeUser } = user
+        console.log('Login successful for:', email)
+        return c.json({ success: true, user: safeUser })
+      }
     }
+    
+    console.log('Login failed for:', email)
+    return c.json({ error: 'Invalid credentials' }, 401)
   } catch (error) {
+    console.log('Login error:', error)
     return c.json({ error: 'Invalid request' }, 400)
   }
 })

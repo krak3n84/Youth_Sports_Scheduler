@@ -17,11 +17,21 @@ class SportsTracker {
     
     // Check for stored user session
     const storedUser = localStorage.getItem('sportsTracker_user');
+    console.log('Stored user session:', storedUser);
+    
     if (storedUser) {
-      this.currentUser = JSON.parse(storedUser);
-      await this.loadUserData();
-      this.showDashboard();
+      try {
+        this.currentUser = JSON.parse(storedUser);
+        console.log('Loaded current user:', this.currentUser);
+        await this.loadUserData();
+        this.showDashboard();
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('sportsTracker_user');
+        this.showAuth();
+      }
     } else {
+      console.log('No stored user session, showing auth');
       this.showAuth();
     }
     
@@ -197,17 +207,24 @@ class SportsTracker {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
 
+    console.log('Attempting login with:', data);
+
     try {
       const response = await axios.post('/api/auth/login', data);
+      console.log('Login response:', response.data);
+      
       if (response.data.success) {
         this.currentUser = response.data.user;
         localStorage.setItem('sportsTracker_user', JSON.stringify(this.currentUser));
+        console.log('User logged in and saved:', this.currentUser);
+        
         await this.loadUserData();
         this.showDashboard();
       } else {
         alert('Invalid credentials');
       }
     } catch (error) {
+      console.error('Login error:', error);
       alert('Login failed: ' + (error.response?.data?.error || 'Network error'));
     }
   }
@@ -620,19 +637,32 @@ class SportsTracker {
   }
 
   async handleAddChild(form) {
+    console.log('handleAddChild called, currentUser:', this.currentUser);
+    
+    // Check if user is logged in
+    if (!this.currentUser || !this.currentUser.id) {
+      alert('You must be logged in to add children. Please log in first.');
+      this.showAuth();
+      return;
+    }
+
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
     data.user_id = this.currentUser.id;
 
+    console.log('Adding child with data:', data);
+
     try {
       const response = await axios.post('/api/children', data);
       if (response.data.success) {
+        alert('Child added successfully!');
         await this.loadUserData();
         this.showChildren();
       } else {
-        alert('Failed to add child');
+        alert('Failed to add child: ' + (response.data.error || 'Unknown error'));
       }
     } catch (error) {
+      console.error('Add child error:', error);
       alert('Error adding child: ' + (error.response?.data?.error || 'Network error'));
     }
   }
