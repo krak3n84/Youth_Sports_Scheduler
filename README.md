@@ -132,8 +132,9 @@ Managing multiple children's sports schedules is challenging. This app solves th
 - Node.js 18+ 
 - npm or yarn
 - Cloudflare account (for D1 database and Pages deployment)
+- PM2 process manager: `npm install -g pm2`
 
-### Local Development
+### Quick Start (Local Development)
 ```bash
 # Clone the repository
 git clone https://github.com/krak3n84/Youth_Sports_Scheduler.git
@@ -142,9 +143,14 @@ cd Youth_Sports_Scheduler
 # Install dependencies
 npm install
 
-# Set up local database
+# Set up local database (creates SQLite database automatically)
 npx wrangler d1 create sports-tracker-production
+# Copy the database_id from output into wrangler.jsonc
+
+# Apply database schema
 npx wrangler d1 migrations apply sports-tracker-production --local
+
+# Load sample data
 npx wrangler d1 execute sports-tracker-production --local --file=./seed.sql
 
 # Build the application
@@ -153,13 +159,19 @@ npm run build
 # Start development server (uses PM2)
 pm2 start ecosystem.config.cjs
 
-# Check status
+# Check status and logs
 pm2 status
 pm2 logs sports-tracker --nostream
 
-# Test locally
+# Test the application
 curl http://localhost:3000/api/health
+# Should return: {"status":"ok","timestamp":"..."}
 ```
+
+### Login Credentials
+After setup, you can login with:
+- **Demo Account**: `parent@example.com` / `password`
+- **Your Account**: Update in database or create new account via registration
 
 ### Production Deployment (Cloudflare Pages)
 ```bash
