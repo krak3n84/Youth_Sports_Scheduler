@@ -555,11 +555,14 @@ app.put('/api/teams/:teamId/calendar', async (c) => {
 app.post('/api/teams/:teamId/sync', async (c) => {
   try {
     const teamId = c.req.param('teamId')
+    console.log('Syncing team calendar for team ID:', teamId)
     
     // Get team calendar URL
     const team = await c.env.DB.prepare(`
       SELECT id, name, calendar_url, sync_enabled FROM teams WHERE id = ?
     `).bind(teamId).first()
+    
+    console.log('Team found:', !!team, team?.name, 'URL:', team?.calendar_url)
     
     if (!team || !team.calendar_url || !team.sync_enabled) {
       return c.json({ error: 'Team calendar not configured or disabled' }, 400)
@@ -567,18 +570,44 @@ app.post('/api/teams/:teamId/sync', async (c) => {
     
     try {
       // Convert webcal:// URLs to https:// for fetch compatibility
-      const calendarUrl = team.calendar_url.replace(/^webcal:\/\//, 'https://')
+      let calendarUrl = team.calendar_url.trim()
+      if (calendarUrl.startsWith('webcal://')) {
+        calendarUrl = calendarUrl.replace('webcal://', 'https://')
+      }
       
-      // Fetch calendar data
-      const response = await fetch(calendarUrl)
+      console.log('Fetching calendar from URL:', calendarUrl)
+      
+      // Fetch calendar data with proper headers
+      const response = await fetch(calendarUrl, {
+        headers: {
+          'User-Agent': 'Sports-Tracker-App/1.0',
+          'Accept': 'text/calendar,text/plain,*/*',
+          'Cache-Control': 'no-cache'
+        }
+      })
+      
+      console.log('Fetch response status:', response.status, response.statusText)
+      
       if (!response.ok) {
-        throw new Error(`Failed to fetch calendar: ${response.status}`)
+        throw new Error(`Failed to fetch calendar: ${response.status} ${response.statusText}`)
       }
       
       const calendarData = await response.text()
+      console.log('Calendar data length:', calendarData.length)
+      console.log('Calendar data preview:', calendarData.substring(0, 500))
+      
+      // Check if this looks like valid iCal data
+      if (!calendarData.includes('BEGIN:VCALENDAR') && !calendarData.includes('BEGIN:VEVENT')) {
+        throw new Error('Invalid calendar format - does not contain iCal data')
+      }
       
       // Parse iCal data (simplified parser)
       const events = parseICalData(calendarData, team.id)
+      console.log('Parsed events count:', events.length)
+      
+      if (events.length > 0) {
+        console.log('Sample event:', JSON.stringify(events[0], null, 2))
+      }
       
       // Insert/update events in database
       let syncCount = 0
@@ -600,6 +629,7 @@ app.post('/api/teams/:teamId/sync', async (c) => {
               event.title, event.event_date, event.start_time, event.end_time || null,
               event.location || null, event.description || null, event.external_id, teamId
             ).run()
+            console.log('Updated existing event:', event.title)
           } else {
             // Insert new event
             const result = await c.env.DB.prepare(`
@@ -620,6 +650,8 @@ app.post('/api/teams/:teamId/sync', async (c) => {
                 FROM child_teams ct
                 WHERE ct.team_id = ? AND ct.active = true
               `).bind(result.meta.last_row_id, teamId).run()
+              
+              console.log('Inserted new event:', event.title)
             }
           }
           syncCount++
@@ -633,6 +665,8 @@ app.post('/api/teams/:teamId/sync', async (c) => {
         UPDATE teams SET last_sync = CURRENT_TIMESTAMP WHERE id = ?
       `).bind(teamId).run()
       
+      console.log('Calendar sync completed. Synced:', syncCount, 'Total parsed:', events.length)
+      
       return c.json({ 
         success: true, 
         synced_events: syncCount,
@@ -640,10 +674,12 @@ app.post('/api/teams/:teamId/sync', async (c) => {
       })
       
     } catch (fetchError) {
+      console.error('Calendar sync fetch error:', fetchError)
       return c.json({ error: 'Failed to fetch or parse calendar data: ' + fetchError.message }, 400)
     }
     
   } catch (error) {
+    console.error('Calendar sync error:', error)
     return c.json({ error: 'Sync failed: ' + error.message }, 500)
   }
 })
@@ -676,21 +712,29 @@ app.get('/api/teams/:teamId/sync-status', async (c) => {
 // Simple iCal parser function
 function parseICalData(icalData, teamId) {
   const events = []
+  console.log('Parsing iCal data, length:', icalData.length)
+  
   // Handle both Windows (\r\n) and Unix (\n) line endings
-  const lines = icalData.split(/\r?\n/).map(line => line.trim())
+  const lines = icalData.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0)
+  console.log('Total lines:', lines.length)
   
   let currentEvent = null
+  let eventCount = 0
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     
     if (line === 'BEGIN:VEVENT') {
+      eventCount++
       currentEvent = {
         team_id: teamId,
         type: 'game', // Default type, will be determined by title
         source: 'calendar'
       }
+      console.log('Starting event #', eventCount)
     } else if (line === 'END:VEVENT' && currentEvent) {
+      console.log('Ending event:', currentEvent.title, currentEvent.event_date, currentEvent.start_time)
+      
       if (currentEvent.title && currentEvent.event_date && currentEvent.start_time) {
         // Determine event type from title
         const title = currentEvent.title.toLowerCase()
@@ -704,25 +748,50 @@ function parseICalData(icalData, teamId) {
           currentEvent.type = 'game'
         }
         
+        // Ensure external_id exists (required field)
+        if (!currentEvent.external_id) {
+          currentEvent.external_id = `${teamId}-${currentEvent.event_date}-${currentEvent.start_time}-${Math.random().toString(36).substring(7)}`
+        }
+        
         events.push(currentEvent)
+        console.log('Added event:', currentEvent.title)
+      } else {
+        console.log('Skipped incomplete event:', {
+          title: currentEvent.title,
+          date: currentEvent.event_date,
+          time: currentEvent.start_time
+        })
       }
       currentEvent = null
     } else if (currentEvent && line.includes(':')) {
-      const [key, ...valueParts] = line.split(':')
-      const value = valueParts.join(':')
+      // Handle multi-line unfolding (lines starting with space/tab continue previous line)
+      let fullLine = line
+      while (i + 1 < lines.length && (lines[i + 1].startsWith(' ') || lines[i + 1].startsWith('\t'))) {
+        i++
+        fullLine += lines[i].substring(1) // Remove leading space/tab
+      }
       
-      switch (key) {
+      const colonIndex = fullLine.indexOf(':')
+      if (colonIndex === -1) continue
+      
+      const key = fullLine.substring(0, colonIndex)
+      const value = fullLine.substring(colonIndex + 1)
+      
+      // Handle parameters in field names (e.g., DTSTART;TZID=America/New_York)
+      const baseKey = key.split(';')[0]
+      
+      switch (baseKey) {
         case 'UID':
           currentEvent.external_id = value
           break
         case 'SUMMARY':
-          currentEvent.title = value
+          currentEvent.title = value.replace(/\\n/g, ' ').replace(/\\,/g, ',').replace(/\\\\/g, '\\')
           break
         case 'DESCRIPTION':
-          currentEvent.description = value
+          currentEvent.description = value.replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\\\/g, '\\')
           break
         case 'LOCATION':
-          currentEvent.location = value
+          currentEvent.location = value.replace(/\\n/g, ' ').replace(/\\,/g, ',').replace(/\\\\/g, '\\')
           break
         case 'DTSTART':
           const startDate = parseICalDateTime(value)
@@ -741,34 +810,51 @@ function parseICalData(icalData, teamId) {
     }
   }
   
+  console.log('Parsed', events.length, 'valid events out of', eventCount, 'total events')
   return events
 }
 
 // Parse iCal datetime format
 function parseICalDateTime(icalDateTime) {
   try {
-    // Handle format: 20241020T140000Z or 20241020T140000
-    const cleanDateTime = icalDateTime.replace(/[TZ]/g, '')
+    console.log('Parsing datetime:', icalDateTime)
     
-    if (cleanDateTime.length >= 8) {
-      const year = cleanDateTime.substring(0, 4)
-      const month = cleanDateTime.substring(4, 6)
-      const day = cleanDateTime.substring(6, 8)
+    // Handle different formats:
+    // 20241020T140000Z (UTC)
+    // 20241020T140000 (local)
+    // 20241020 (date only)
+    
+    let cleanDateTime = icalDateTime.trim()
+    
+    // Remove timezone info for now (we'll assume local time)
+    cleanDateTime = cleanDateTime.replace(/Z$/, '').replace(/[+-]\d{4}$/, '')
+    
+    // Split on T if present
+    const parts = cleanDateTime.split('T')
+    const datePart = parts[0]
+    const timePart = parts[1] || '000000'
+    
+    if (datePart.length >= 8) {
+      const year = datePart.substring(0, 4)
+      const month = datePart.substring(4, 6)
+      const day = datePart.substring(6, 8)
       
       const date = `${year}-${month}-${day}`
       
-      if (cleanDateTime.length >= 14) {
-        const hour = cleanDateTime.substring(8, 10)
-        const minute = cleanDateTime.substring(10, 12)
+      if (timePart.length >= 6) {
+        const hour = timePart.substring(0, 2)
+        const minute = timePart.substring(2, 4)
         const time = `${hour}:${minute}`
         
+        console.log('Parsed datetime:', { date, time })
         return { date, time }
       }
       
+      console.log('Parsed date only:', { date, time: '00:00' })
       return { date, time: '00:00' }
     }
   } catch (error) {
-    console.error('Error parsing iCal datetime:', error)
+    console.error('Error parsing iCal datetime:', icalDateTime, error)
   }
   
   return null

@@ -895,6 +895,9 @@ class SportsTracker {
             <button data-back class="mr-3 px-4 py-3 bg-cyan-500 text-white hover:bg-cyan-600 rounded-lg transition-colors shadow-lg font-bold text-lg">
               <i class="fas fa-arrow-left text-xl mr-2"></i>← BACK
             </button>
+            <button data-nav="dashboard" class="mr-3 px-4 py-3 bg-green-500 text-white hover:bg-green-600 rounded-lg transition-colors shadow-lg font-bold text-lg">
+              <i class="fas fa-home text-xl mr-2"></i>🏠 HOME
+            </button>
             <div class="flex-1">
               <h1 class="text-2xl font-bold text-gray-900 mb-1">
                 <i class="fas fa-${icon} text-blue-600 mr-2"></i>
@@ -908,11 +911,18 @@ class SportsTracker {
     } else {
       return `
         <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-1">
-            <i class="fas fa-${icon} text-blue-600 mr-2"></i>
-            ${title}
-          </h1>
-          <p class="text-gray-600">${subtitle}</p>
+          <div class="flex items-center mb-4">
+            <button data-nav="dashboard" class="mr-3 px-4 py-3 bg-green-500 text-white hover:bg-green-600 rounded-lg transition-colors shadow-lg font-bold text-lg">
+              <i class="fas fa-home text-xl mr-2"></i>🏠 HOME
+            </button>
+            <div class="flex-1">
+              <h1 class="text-2xl font-bold text-gray-900 mb-1">
+                <i class="fas fa-${icon} text-blue-600 mr-2"></i>
+                ${title}
+              </h1>
+              <p class="text-gray-600">${subtitle}</p>
+            </div>
+          </div>
         </div>
       `;
     }
